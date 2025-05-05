@@ -45,57 +45,90 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Demo button
   const demoButton = document.getElementById("demo-button");
-  demoButton.addEventListener("click", () => {
-    fetch("/api/demo-text")
-      .then((response) => response.json())
-      .then((data) => {
-        document.getElementById("text-input").value = data.text;
-      })
-      .catch((error) => console.error("Error loading demo text:", error));
-  });
+  if (demoButton) {
+    demoButton.addEventListener("click", () => {
+      fetch("/api/demo-text")
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("text-input").value = data.text;
+        })
+        .catch((error) => console.error("Error loading demo text:", error));
+    });
+  }
 
   // Clear button
   const clearButton = document.getElementById("clear-btn");
-  clearButton.addEventListener("click", () => {
-    document.getElementById("text-input").value = "";
-    document.getElementById("results-container").style.display = "none";
-  });
+  if (clearButton) {
+    clearButton.addEventListener("click", () => {
+      const textInput = document.getElementById("text-input");
+      if (textInput) {
+        textInput.value = "";
+      }
+      const resultsContainer = document.getElementById("results-container");
+      if (resultsContainer) {
+        resultsContainer.style.display = "none";
+      }
+    });
+  }
 
   // Analyze button
   const analyzeButton = document.getElementById("analyze-btn");
-  analyzeButton.addEventListener("click", analyzeText);
+  if (analyzeButton) {
+    analyzeButton.addEventListener("click", analyzeText);
+  }
 
   // Analyze text function
   function analyzeText() {
-    const textInput = document.getElementById("text-input").value.trim();
+    const textInput = document.getElementById("text-input");
+    if (!textInput) return;
 
-    if (!textInput) {
+    const inputText = textInput.value.trim();
+
+    if (!inputText) {
       alert("Please enter some text to analyze.");
       return;
     }
 
     // Show loader
     const loader = document.getElementById("loader");
+    if (!loader) return;
+
     loader.style.display = "block";
 
     // Hide results
-    document.getElementById("results-container").style.display = "none";
+    const resultsContainer = document.getElementById("results-container");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
 
     // Update progress bar animation
     const progressFill = document.querySelector(".progress-fill");
     const statusText = document.getElementById("status-text");
 
-    progressFill.style.width = "25%";
-    statusText.textContent = "Analyzing text...";
+    if (progressFill) {
+      progressFill.style.width = "25%";
+    }
+
+    if (statusText) {
+      statusText.textContent = "Analyzing text...";
+    }
 
     setTimeout(() => {
-      progressFill.style.width = "50%";
-      statusText.textContent = "Scanning for URLs...";
+      if (progressFill) {
+        progressFill.style.width = "50%";
+      }
+      if (statusText) {
+        statusText.textContent = "Scanning for URLs...";
+      }
     }, 500);
 
     setTimeout(() => {
-      progressFill.style.width = "75%";
-      statusText.textContent = "Analyzing website safety...";
+      if (progressFill) {
+        progressFill.style.width = "75%";
+      }
+      if (statusText) {
+        statusText.textContent = "Analyzing website safety...";
+      }
     }, 1000);
 
     // Send API request
@@ -104,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: textInput }),
+      body: JSON.stringify({ text: inputText }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -114,21 +147,32 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then((data) => {
         // Complete progress bar
-        progressFill.style.width = "100%";
-        statusText.textContent = "Analysis complete!";
+        if (progressFill) {
+          progressFill.style.width = "100%";
+        }
+        if (statusText) {
+          statusText.textContent = "Analysis complete!";
+        }
 
         setTimeout(() => {
           // Hide loader
-          loader.style.display = "none";
+          if (loader) {
+            loader.style.display = "none";
+          }
 
           // Show results
           displayResults(data);
-          document.getElementById("results-container").style.display = "block";
+
+          if (resultsContainer) {
+            resultsContainer.style.display = "block";
+          }
         }, 500);
       })
       .catch((error) => {
         console.error("Error:", error);
-        loader.style.display = "none";
+        if (loader) {
+          loader.style.display = "none";
+        }
         alert("An error occurred during analysis. Please try again.");
       });
   }
@@ -137,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function displayResults(data) {
     // Spam analysis results
     const predictionBox = document.getElementById("prediction-box");
+    if (!predictionBox) return;
 
     let mainProb, otherProb, mainLabel, otherLabel, mainColor, otherColor;
     if (data.prediction === "Spam") {
@@ -157,17 +202,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     predictionBox.style.backgroundColor = mainColor;
     predictionBox.innerHTML = `
-            <h2>${mainLabel}</h2>
-            <p>Confidence: ${data.confidence.toFixed(1)}%</p>
-        `;
+      <h2>${mainLabel}</h2>
+      <p>Confidence: ${data.confidence.toFixed(1)}%</p>
+    `;
 
-    // Always show 'Spam Probability' and spam probability value in the gauge
+    // Update the gauge label but don't show percentages in the gauge's main display
     const gaugeLabel = document.getElementById("gauge-label");
     if (gaugeLabel) {
       gaugeLabel.textContent = "Spam Probability";
     }
+
     const spamGaugeColor = data.spam_probability > 50 ? "#ff7675" : "#00b894";
-    createGaugeChart("spam-gauge", data.spam_probability, spamGaugeColor);
+    createGaugeChart(
+      "spam-gauge",
+      data.spam_probability,
+      spamGaugeColor,
+      false
+    );
 
     // Pie chart
     createPieChart(
@@ -183,6 +234,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const urlChartContainer = document.getElementById("url-chart-container");
     const urlCardsContainer = document.getElementById("url-cards-container");
     const overallAssessment = document.getElementById("overall-assessment");
+
+    if (
+      !noUrlsMessage ||
+      !urlChartContainer ||
+      !urlCardsContainer ||
+      !overallAssessment
+    )
+      return;
 
     // Clear previous URL results
     urlCardsContainer.innerHTML = "";
@@ -220,13 +279,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       overallAssessment.style.display = "block";
       overallAssessment.innerHTML = `
-                <div class="assessment-box" style="background-color: ${assessmentColor};">
-                    <h3>Overall URL Assessment</h3>
-                    <p>Average trust score: ${avgScore.toFixed(
-                      1
-                    )}/100 - ${assessmentText}</p>
-                </div>
-            `;
+        <div class="assessment-box" style="background-color: ${assessmentColor};">
+          <h3>Overall URL Assessment</h3>
+          <p>Average trust score: ${avgScore.toFixed(
+            1
+          )}/100 - ${assessmentText}</p>
+        </div>
+      `;
     } else {
       noUrlsMessage.style.display = "block";
       urlChartContainer.style.display = "none";
@@ -258,9 +317,12 @@ document.addEventListener("DOMContentLoaded", function () {
     details.className = "url-details";
 
     details.innerHTML = `
-            <p><strong>Full URL:</strong> ${urlInfo.url}</p>
-            <p><strong>Classification:</strong> ${urlInfo.classification}</p>
-        `;
+      <p><strong>Full URL:</strong> ${urlInfo.url}</p>
+      <p><strong>Classification:</strong> ${urlInfo.classification}</p>
+      <p><strong>Trust Score:</strong> <span style="color: white;">${urlInfo.trust_score.toFixed(
+        1
+      )}%</span></p>
+    `;
 
     if (urlInfo.risk_factors && urlInfo.risk_factors.length > 0) {
       const riskFactors = document.createElement("div");
@@ -294,12 +356,13 @@ document.addEventListener("DOMContentLoaded", function () {
     card.appendChild(title);
     card.appendChild(content);
 
-    // Create gauge chart for URL trust score
+    // Create gauge chart for URL trust score - with showPercentText=false to hide the text
     setTimeout(() => {
       createGaugeChart(
         `url-gauge-${index}`,
         urlInfo.trust_score,
-        urlInfo.trust_score >= 50 ? "#00b894" : "#ff7675"
+        urlInfo.trust_score >= 50 ? "#00b894" : "#ff7675",
+        false // Don't show percentage text in gauge
       );
     }, 0);
 
@@ -307,7 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Create gauge chart
-  function createGaugeChart(canvasId, value, color) {
+  function createGaugeChart(canvasId, value, color, showPercentText = false) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -319,7 +382,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // Remove any existing center text
     const parent = canvas.parentNode;
     const oldCenterText = parent.querySelector(".gauge-center-text");
-    if (oldCenterText) parent.removeChild(oldCenterText);
+    if (oldCenterText) {
+      parent.removeChild(oldCenterText);
+    }
 
     const ctx = canvas.getContext("2d");
     window[canvasId + "Chart"] = new Chart(ctx, {
@@ -348,14 +413,17 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    // Only add center text for gauge containers
+    // Only add center text if showPercentText is true
     if (
-      parent.classList.contains("gauge-chart-container") ||
-      parent.classList.contains("url-gauge")
+      showPercentText &&
+      (parent.classList.contains("gauge-chart-container") ||
+        parent.classList.contains("url-gauge"))
     ) {
       const centerText = document.createElement("div");
       centerText.className = "gauge-center-text";
-      centerText.innerHTML = `${value.toFixed(1)}%`;
+      centerText.innerHTML = `<span style="color: white;">${value.toFixed(
+        1
+      )}%</span>`;
       parent.appendChild(centerText);
     }
   }
@@ -483,71 +551,73 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Create indicators chart for "How It Works" tab
-  const spamIndicators = {
-    "Urgency Language": 85,
-    "Suspicious Links": 78,
-    "Request for Information": 72,
-    "Grammar Errors": 65,
-    "Money Offers": 92,
-    "Account Warnings": 81,
-  };
-
   const indicatorsCanvas = document.getElementById("indicators-chart");
-  new Chart(indicatorsCanvas, {
-    type: "bar",
-    data: {
-      labels: Object.keys(spamIndicators),
-      datasets: [
-        {
-          label: "Frequency (%)",
-          data: Object.values(spamIndicators),
-          backgroundColor: "#38b6ff",
-          borderWidth: 0,
-        },
-      ],
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          beginAtZero: true,
-          max: 100,
-          grid: {
-            color: "#444444",
+  if (indicatorsCanvas) {
+    const spamIndicators = {
+      "Urgency Language": 85,
+      "Suspicious Links": 78,
+      "Request for Information": 72,
+      "Grammar Errors": 65,
+      "Money Offers": 92,
+      "Account Warnings": 81,
+    };
+
+    new Chart(indicatorsCanvas, {
+      type: "bar",
+      data: {
+        labels: Object.keys(spamIndicators),
+        datasets: [
+          {
+            label: "Frequency (%)",
+            data: Object.values(spamIndicators),
+            backgroundColor: "#38b6ff",
+            borderWidth: 0,
           },
-          ticks: {
-            color: "white",
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 100,
+            grid: {
+              color: "#444444",
+            },
+            ticks: {
+              color: "white",
+            },
+            title: {
+              display: true,
+              text: "Frequency in Spam Messages (%)",
+              color: "white",
+            },
+          },
+          y: {
+            grid: {
+              color: "#444444",
+            },
+            ticks: {
+              color: "white",
+            },
+          },
+        },
+        plugins: {
+          legend: {
+            display: false,
           },
           title: {
             display: true,
-            text: "Frequency in Spam Messages (%)",
+            text: "Common Indicators in Spam Messages",
             color: "white",
-          },
-        },
-        y: {
-          grid: {
-            color: "#444444",
-          },
-          ticks: {
-            color: "white",
+            font: {
+              size: 16,
+            },
           },
         },
       },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: "Common Indicators in Spam Messages",
-          color: "white",
-          font: {
-            size: 16,
-          },
-        },
-      },
-    },
-  });
+    });
+  }
 });
