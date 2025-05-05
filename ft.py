@@ -761,10 +761,10 @@ def main():
                          disabled=st.session_state.theme=="dark"):
                 st.session_state.theme = "dark"
                 st.rerun()
-       with theme_col2:
-    if st.button("☀️ Light Mode", use_container_width=True, disabled=st.session_state.theme=="light"):
-        st.session_state.theme = "light"
-        st.rerun()
+    with theme_col2:
+        if st.button("☀️ Light Mode", use_container_width=True, disabled=st.session_state.theme == "light"):
+            st.session_state.theme = "light"
+            st.rerun()
 
 st.header("About")
 st.markdown("""
